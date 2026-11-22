@@ -1,0 +1,16 @@
+{
+  "appId": "com.hicealgo.bichario.lab",
+  "appName": "Bichario Lab",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#FAF5E8",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#FAF5E8"
+    }
+  }
+}
