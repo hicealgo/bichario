@@ -1,4 +1,12 @@
-import { CuratedDrawPalette, LayoutArchetype, SampleBicho, ThemeSpec } from '../types';
+import {
+  AmbianceMode,
+  CuratedDrawPalette,
+  JarShape,
+  LayoutArchetype,
+  MovementStyle,
+  SampleBicho,
+  ThemeSpec,
+} from '../types';
 
 export const THEMES: ThemeSpec[] = [
   {
@@ -293,6 +301,290 @@ export const THEMES: ThemeSpec[] = [
       soil: '#965A46',
     },
   },
+  // === 4 NEW LAB 1.1 THEMES ===
+  {
+    id: 'invernadero-sol',
+    name: 'Invernadero Sol',
+    subtitle: 'Honey Greenhouse',
+    vibeTag: 'Golden honey · sunny fern',
+    description:
+      'Warm buttercup sunshine streaming through greenhouse panes, crisp terracotta clay, and fresh sunlit fern.',
+    displayFont: '"Fredoka", system-ui, sans-serif',
+    bodyFont: '"Nunito", system-ui, sans-serif',
+    monoFont: '"JetBrains Mono", monospace',
+    radius: 24,
+    organicRadius: false,
+    borderWidth: 2,
+    shadowStyle: 'cartoon',
+    texture: 'paper',
+    squish: 85,
+    palette: {
+      bg: '#FFF6DF',
+      bgAlt: '#F5E6BF',
+      surface: '#FFFCF2',
+      surfaceTint: '#EDF6E1',
+      ink: '#3F3021',
+      inkMuted: '#836C52',
+      accent: '#4E9448',
+      accentInk: '#FFFCF2',
+      secondary: '#E27A48',
+      secondaryInk: '#FFFCF2',
+      warm: '#F2BE3E',
+      border: '#5E462C',
+      jarSkyTop: '#FFFDF2',
+      jarSkyBottom: '#EAF5DD',
+      mossMain: '#5EA352',
+      mossLight: '#97CB76',
+      soil: '#855B3C',
+    },
+  },
+  {
+    id: 'ceramica-matcha',
+    name: 'Cerámica Matcha',
+    subtitle: 'Washi & Tea House',
+    vibeTag: 'Calm washi · matte glaze',
+    description:
+      'Serene Japanese tea-house calm: handmade washi paper, ceremonial matcha glaze, and roasted sesame ink.',
+    displayFont: '"Fraunces", Georgia, serif',
+    bodyFont: '"Quicksand", system-ui, sans-serif',
+    monoFont: '"JetBrains Mono", monospace',
+    radius: 18,
+    organicRadius: true,
+    borderWidth: 1.5,
+    shadowStyle: 'soft',
+    texture: 'linen',
+    squish: 50,
+    palette: {
+      bg: '#F2F0E6',
+      bgAlt: '#E6E2D3',
+      surface: '#FAF9F4',
+      surfaceTint: '#E9EFE1',
+      ink: '#36312B',
+      inkMuted: '#787166',
+      accent: '#74945C',
+      accentInk: '#FAF9F4',
+      secondary: '#B5895A',
+      secondaryInk: '#FAF9F4',
+      warm: '#D17A5A',
+      border: '#8F8A7B',
+      jarSkyTop: '#F6F8F2',
+      jarSkyBottom: '#E3EBDC',
+      mossMain: '#76965E',
+      mossLight: '#A2BD88',
+      soil: '#735D4B',
+    },
+  },
+  {
+    id: 'honguito-bosque',
+    name: 'Honguito Bosque',
+    subtitle: 'Storybook Toadstool',
+    vibeTag: 'Fairytale · berry & pine',
+    description:
+      'Cozy woodland picture-book magic with toadstool crimson buttons, deep pine green, and warm oatmeal parchment.',
+    displayFont: '"Baloo 2", system-ui, sans-serif',
+    bodyFont: '"Nunito", system-ui, sans-serif',
+    monoFont: '"JetBrains Mono", monospace',
+    radius: 24,
+    organicRadius: true,
+    borderWidth: 2.5,
+    shadowStyle: 'cartoon',
+    texture: 'dots',
+    squish: 90,
+    palette: {
+      bg: '#F7EFE1',
+      bgAlt: '#EADCC6',
+      surface: '#FFFBF3',
+      surfaceTint: '#FBECE8',
+      ink: '#332520',
+      inkMuted: '#786258',
+      accent: '#C94B3E',
+      accentInk: '#FFFBF3',
+      secondary: '#3D6E52',
+      secondaryInk: '#FFFBF3',
+      warm: '#EBB44A',
+      border: '#3C2A23',
+      jarSkyTop: '#F4F7EE',
+      jarSkyBottom: '#DFECD9',
+      mossMain: '#4B825D',
+      mossLight: '#82B588',
+      soil: '#6E4937',
+    },
+  },
+  {
+    id: 'chicle-menta',
+    name: 'Menta & Durazno',
+    subtitle: 'Cozy Indie Pop',
+    vibeTag: 'Playful · peach & mint',
+    description:
+      'Bouncy rounded indie charm with soft peach cream, refreshing mint moss, and cheerful berry accents.',
+    displayFont: '"Fredoka", system-ui, sans-serif',
+    bodyFont: '"Nunito", system-ui, sans-serif',
+    monoFont: '"JetBrains Mono", monospace',
+    radius: 28,
+    organicRadius: false,
+    borderWidth: 2,
+    shadowStyle: 'clay',
+    texture: 'none',
+    squish: 95,
+    palette: {
+      bg: '#FFF2ED',
+      bgAlt: '#FCE2D9',
+      surface: '#FFFFFF',
+      surfaceTint: '#E7F8F1',
+      ink: '#3A2C35',
+      inkMuted: '#826C79',
+      accent: '#46B38B',
+      accentInk: '#FFFFFF',
+      secondary: '#EE7B95',
+      secondaryInk: '#FFFFFF',
+      warm: '#F7C252',
+      border: '#E5BEB5',
+      jarSkyTop: '#F3FCF8',
+      jarSkyBottom: '#E0F4EE',
+      mossMain: '#4EB88E',
+      mossLight: '#87D9B4',
+      soil: '#966A5D',
+    },
+  },
+];
+
+export const JAR_SHAPE_OPTIONS: {
+  id: JarShape;
+  name: string;
+  short: string;
+  desc: string;
+}[] = [
+  {
+    id: 'mason',
+    name: 'Classic Cork Jar',
+    short: 'Cork Jar',
+    desc: 'Warm rounded mason jar with a chunky cork stopper.',
+  },
+  {
+    id: 'dome',
+    name: 'Bell Cloche Dome',
+    short: 'Bell Dome',
+    desc: 'Tall botanical glass bell resting on a turned wooden plinth.',
+  },
+  {
+    id: 'orb',
+    name: 'Round Glass Orb',
+    short: 'Orb Bowl',
+    desc: 'Chubby spherical fishbowl terrarium with a little cork top.',
+  },
+  {
+    id: 'hex',
+    name: 'Geometric Greenhouse',
+    short: 'Hex Glass',
+    desc: 'Cozy faceted Wardian glass prism with brass-feel edges.',
+  },
+  {
+    id: 'teardrop',
+    name: 'Hanging Teardrop',
+    short: 'Teardrop',
+    desc: 'Suspended droplet glass globe hanging from rustic twine.',
+  },
+  {
+    id: 'terrarium_box',
+    name: 'Wide Moss Diorama',
+    short: 'Wide Box',
+    desc: 'Roomy wooden-framed tabletop habitat with lots of floor space.',
+  },
+];
+
+export const AMBIANCE_OPTIONS: {
+  id: AmbianceMode;
+  label: string;
+  icon: string;
+}[] = [
+  { id: 'sunny', label: 'Sunny', icon: '☀️' },
+  { id: 'golden', label: 'Golden', icon: '🌅' },
+  { id: 'rain', label: 'Rain', icon: '🌧️' },
+  { id: 'night', label: 'Fireflies', icon: '✨' },
+];
+
+export const MOVEMENT_OPTIONS: {
+  id: MovementStyle;
+  name: string;
+  emoji: string;
+  tagline: string;
+}[] = [
+  {
+    id: 'crawler',
+    name: 'Crawler',
+    emoji: '🐞',
+    tagline: 'Trots along moss hills with happy bobs',
+  },
+  {
+    id: 'hopper',
+    name: 'Hopper',
+    emoji: '🦗',
+    tagline: 'Squishes down and boings across the jar',
+  },
+  {
+    id: 'flyer',
+    name: 'Flutterer',
+    emoji: '🦋',
+    tagline: 'Flutters in the air & perches to rest',
+  },
+  {
+    id: 'inchworm',
+    name: 'Wiggler',
+    emoji: '🐛',
+    tagline: 'Stretches & scrunches like an inchworm',
+  },
+  {
+    id: 'climber',
+    name: 'Wall Climber',
+    emoji: '🐜',
+    tagline: 'Scales right up the glass jar walls!',
+  },
+  {
+    id: 'pet_rock',
+    name: 'Pet Rock',
+    emoji: '🪨',
+    tagline: 'Sits peacefully & vibes (bonus mode!)',
+  },
+];
+
+export const RANDOM_BICHO_NAMES = [
+  'Rolo',
+  'Pipi',
+  'Musguito',
+  'Chispita',
+  'Bolita',
+  'Mimi',
+  'Nube',
+  'Pampa',
+  'Toto',
+  'Lulú',
+  'Pelusa',
+  'Frutilla',
+  'Boli',
+  'Sésamo',
+  'Canela',
+  'Copito',
+  'Kiko',
+  'Brote',
+];
+
+export const RANDOM_PLANT_NAMES = [
+  'Helecho Bebé',
+  'Musgo Suave',
+  'Trébol Feliz',
+  'Honguito',
+  'Pastito',
+  'Hoja Loca',
+  'Brotecito',
+];
+
+export const RANDOM_ROCK_NAMES = [
+  'Piedrita',
+  'Roca Musgo',
+  'Guijarro',
+  'Peña Chica',
+  'Roca Tibia',
+  'Cristalito',
 ];
 
 export const LAYOUT_OPTIONS: {
@@ -408,9 +700,10 @@ export const SAMPLE_BICHOS: SampleBicho[] = [
   {
     id: 'rolo',
     name: 'Rolo',
-    creator: 'Sofi',
+    creator: 'Starter',
     species: 'Polka Beetle',
     kind: 'beetle',
+    movement: 'crawler',
     status: 'in_jar',
     birthday: '12 Nov',
     color: '#DF6449',
@@ -424,9 +717,10 @@ export const SAMPLE_BICHOS: SampleBicho[] = [
   {
     id: 'mimi',
     name: 'Mimi',
-    creator: 'Ema',
+    creator: 'Starter',
     species: 'Moss Inchworm',
     kind: 'inchworm',
+    movement: 'inchworm',
     status: 'in_jar',
     birthday: '15 Nov',
     color: '#7EC472',
@@ -437,9 +731,10 @@ export const SAMPLE_BICHOS: SampleBicho[] = [
   {
     id: 'lulu',
     name: 'Lulú',
-    creator: 'Papá',
+    creator: 'Starter',
     species: 'Butter Moth',
     kind: 'moth',
+    movement: 'flyer',
     status: 'in_jar',
     birthday: '18 Nov',
     color: '#F2BF54',
@@ -453,10 +748,11 @@ export const SAMPLE_BICHOS: SampleBicho[] = [
   {
     id: 'boli',
     name: 'Boli',
-    creator: 'Sofi',
+    creator: 'Starter',
     species: 'Sleepy Pillbug',
     kind: 'pillbug',
-    status: 'visiting',
+    movement: 'pet_rock',
+    status: 'in_jar',
     birthday: '20 Nov',
     color: '#8E7EB5',
     spotColor: '#E8DFF7',

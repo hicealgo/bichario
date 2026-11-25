@@ -1870,3 +1870,399 @@ button {
   background: #e5dccb;
   color: #6e5f54;
 }
+
+/* ===== LAB 1.1 ADDITIONS ===== */
+.ribbon-pill.fullscreen-trigger {
+  padding: 5px 8px;
+}
+
+.arena-stage-wrap {
+  position: relative;
+}
+
+.exit-fullscreen-pill {
+  position: absolute;
+  top: 66px;
+  right: 14px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(58, 46, 40, 0.58);
+  color: #faf4e6;
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  opacity: 0.72;
+  transition: opacity 0.16s ease, transform 0.12s ease;
+}
+
+.exit-fullscreen-pill:active {
+  opacity: 1;
+  transform: scale(0.94);
+}
+
+.topbar-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mock-icon-pill {
+  width: calc(36px * var(--b-scale));
+  height: calc(36px * var(--b-scale));
+  padding: 0;
+  background: var(--b-surface);
+  color: var(--b-ink);
+}
+
+.terrarium-canvas.is-moss-painting {
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.moss-paint-bar {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 20;
+}
+
+.moss-paint-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--b-font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.moss-paint-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.moss-paint-actions .b-btn {
+  flex: 1;
+}
+
+.pop-sprite-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--b-surface-tint);
+  border: 1.5px solid var(--b-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  flex: 0 0 auto;
+}
+
+.pop-sprite-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pop-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pop-mini-btn {
+  padding: 5px 10px;
+  font-size: 11.5px;
+}
+
+/* ===== REAL INTERACTIVE DRAW STUDIO ===== */
+.draw-kind-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.draw-kind-btn {
+  padding: 7px 6px;
+  font-size: 12.5px;
+}
+
+.live-draw-canvas-box {
+  flex: 1 1 auto;
+  min-height: 220px;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.draw-header-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mini-canvas-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--b-surface-tint);
+  color: var(--b-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.mini-canvas-action:disabled {
+  opacity: 0.35;
+}
+
+.palette-cycle-chip {
+  cursor: pointer;
+}
+
+.live-draw-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 175px;
+  border-radius: 16px;
+  background: #fffdf8;
+  border: 1.5px dashed rgba(90, 74, 58, 0.24);
+  overflow: hidden;
+}
+
+.live-draw-canvas {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.canvas-empty-prompt {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  pointer-events: none;
+  color: #9b8c7f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.canvas-warn-pill {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  background: #d95b52;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.draw-sub-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.draw-size-group {
+  display: flex;
+  gap: 5px;
+}
+
+.draw-size-btn {
+  width: 34px;
+  height: 30px;
+  font-size: 12px;
+}
+
+/* Save & Name Entity Sheet */
+.save-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.save-sprite-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #fffdf7;
+  border: 2px solid #483b33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  flex: 0 0 auto;
+}
+
+.save-sprite-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.name-input-row {
+  display: flex;
+  gap: 7px;
+}
+
+.dice-btn {
+  flex: 0 0 auto;
+  width: 42px;
+  border-radius: 12px;
+  background: #efe6d6;
+  border: 1.5px solid rgba(58, 46, 40, 0.2);
+  font-size: 18px;
+}
+
+.creator-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.creator-row small {
+  font-size: 12px;
+  font-weight: 700;
+  color: #77665a;
+  white-space: nowrap;
+}
+
+.creator-input {
+  padding: 6px 9px;
+}
+
+.move-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.move-card {
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 14px;
+  background: #f6f0e4;
+  border: 1.5px solid rgba(58, 46, 40, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.move-card.is-active {
+  background: #eaf4e4;
+  border-color: #4f8545;
+  box-shadow: 0 3px 0 #4f8545;
+}
+
+.move-emoji {
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.move-card strong {
+  font-size: 13px;
+}
+
+.move-card small {
+  font-size: 11px;
+  color: #746458;
+  line-height: 1.25;
+}
+
+/* Bichodex custom sprites */
+.dex-custom-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--b-surface-tint);
+  border: 1.5px solid var(--b-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.dex-custom-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dex-del-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--b-surface-tint);
+  color: var(--b-ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dex-move-chip {
+  align-self: flex-start;
+  margin: 2px 0 4px;
+  cursor: pointer;
+}
+
+.dex-empty-card {
+  padding: 18px 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dex-empty-card p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--b-ink-muted);
+}
+
+.dex-starter-toggle {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.dex-starter-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--b-accent);
+}
+
+.rm-pill.state-done {
+  background: #d5e8ce;
+  color: #2f5728;
+}

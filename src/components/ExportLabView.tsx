@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
-import { CURATED_DRAW_PALETTES, LAYOUT_OPTIONS, THEMES } from '../data/themes';
 import {
+  AMBIANCE_OPTIONS,
+  CURATED_DRAW_PALETTES,
+  JAR_SHAPE_OPTIONS,
+  LAYOUT_OPTIONS,
+  THEMES,
+} from '../data/themes';
+import {
+  AmbianceMode,
+  CustomBicho,
+  CustomDecor,
+  JarShape,
   LayoutArchetype,
   MenuSketch,
   StyleOverrides,
@@ -14,10 +24,15 @@ interface ExportLabViewProps {
   appVersion: string;
   activeThemeId: string;
   activeLayout: LayoutArchetype;
+  activeJarShape: JarShape;
+  activeAmbiance: AmbianceMode;
   activeDrawPaletteId: string;
   overridesByTheme: Record<string, StyleOverrides>;
   feedbackByTheme: Record<string, ThemeFeedback>;
   sketches: MenuSketch[];
+  customBichos: CustomBicho[];
+  customDecors: CustomDecor[];
+  mossCount: number;
   globalNotes: string;
   pointerTypesSeen: string[];
   onChangeGlobalNotes: (val: string) => void;
@@ -26,21 +41,30 @@ interface ExportLabViewProps {
 }
 
 const ROADMAP = [
-  { v: 'v0.1.0', title: 'Lab 1 · UI Aesthetic Arena & Menu Scribbler', state: 'LIVE' },
-  { v: 'v0.2.0', title: 'Lab 2 · Bicho Drawing, Brushes & Curated Palettes', state: 'NEXT' },
-  { v: 'v0.3.0', title: 'Lab 3 · Bring-It-To-Life Animation & Cozy Physics', state: 'SOON' },
-  { v: 'v0.4.0', title: 'Lab 4 · Living Terrarium, Moss Brush & Plants', state: 'SOON' },
-  { v: 'v0.5.0', title: 'Lab 5 · Bichodex, Passports & Firebase Family Jars', state: 'SOON' },
+  { v: 'v0.1.0', title: 'Lab 1 · UI Aesthetic Arena & Menu Scribbler', state: 'DONE' },
+  {
+    v: 'v0.1.1',
+    title: 'Lab 1.1 · Local Bicho/Plant/Rock Drawing, 6 Jars, Pet Rock & Fullscreen',
+    state: 'LIVE',
+  },
+  { v: 'v0.2.0', title: 'Lab 2 · Pro Brushes, Multi-part Wings/Legs & Sound', state: 'NEXT' },
+  { v: 'v0.3.0', title: 'Lab 3 · Deep Animation & Cozy-Light Physics Sandbox', state: 'SOON' },
+  { v: 'v0.4.0', title: 'Lab 4 · Firebase Shared Family Jars, Passports & Admin', state: 'SOON' },
 ];
 
 export const ExportLabView: React.FC<ExportLabViewProps> = ({
   appVersion,
   activeThemeId,
   activeLayout,
+  activeJarShape,
+  activeAmbiance,
   activeDrawPaletteId,
   overridesByTheme,
   feedbackByTheme,
   sketches,
+  customBichos,
+  customDecors,
+  mossCount,
   globalNotes,
   pointerTypesSeen,
   onChangeGlobalNotes,
@@ -54,6 +78,10 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
   const activeTheme = THEMES.find((t) => t.id === activeThemeId) ?? THEMES[0];
   const activeLayoutInfo =
     LAYOUT_OPTIONS.find((l) => l.id === activeLayout) ?? LAYOUT_OPTIONS[0];
+  const activeJarInfo =
+    JAR_SHAPE_OPTIONS.find((j) => j.id === activeJarShape) ?? JAR_SHAPE_OPTIONS[0];
+  const activeAmbInfo =
+    AMBIANCE_OPTIONS.find((a) => a.id === activeAmbiance) ?? AMBIANCE_OPTIONS[0];
   const activePalette =
     CURATED_DRAW_PALETTES.find((p) => p.id === activeDrawPaletteId) ??
     CURATED_DRAW_PALETTES[0];
@@ -75,10 +103,15 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
         appVersion,
         activeThemeId,
         activeLayout,
+        activeJarShape,
+        activeAmbiance,
         activeDrawPaletteId,
         overridesByTheme,
         feedbackByTheme,
         sketches: nonEmptySketches,
+        customBichos,
+        customDecors,
+        mossCount,
         globalNotes,
         pointerTypesSeen,
       });
@@ -95,12 +128,12 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
       <div className="export-card hero-export-card">
         <div className="export-badge-row">
           <span className="version-badge">Bichario Lab · v{appVersion}</span>
-          <span className="zip-contents-tag">manifest.json + feedback.md + PNGs</span>
+          <span className="zip-contents-tag">manifest + bichos + decor + sketches</span>
         </div>
         <h2>Export Your Taste Pack</h2>
         <p>
-          Generates a single <code>.zip</code> with your active theme, feel sliders, star
-          ratings, notes, and every menu sketch you drew — ready to send right back!
+          Generates a single <code>.zip</code> with your active theme, jar shape, sliders,
+          ratings, hand-drawn bichos/plants/rocks, and every menu sketch you drew!
         </p>
 
         <button
@@ -110,7 +143,7 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
           disabled={exporting}
         >
           <ZipExportIcon size={21} />
-          <span>{exporting ? 'Packing .zip...' : 'Export Lab 1 (.zip)'}</span>
+          <span>{exporting ? 'Packing .zip...' : 'Export Lab 1.1 (.zip)'}</span>
         </button>
 
         {lastResult && (
@@ -136,6 +169,12 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
             <strong>{activeTheme.name}</strong>
           </div>
           <div className="summary-item">
+            <small>Jar Shape & Mood</small>
+            <strong>
+              {activeJarInfo.short} · {activeAmbInfo.icon}
+            </strong>
+          </div>
+          <div className="summary-item">
             <small>Menu Layout</small>
             <strong>{activeLayoutInfo.name}</strong>
           </div>
@@ -144,8 +183,14 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
             <strong>{activePalette.name}</strong>
           </div>
           <div className="summary-item">
-            <small>Menu Sketches</small>
-            <strong>{nonEmptySketches.length} drawn</strong>
+            <small>Our Bichos</small>
+            <strong>{customBichos.length} drawn</strong>
+          </div>
+          <div className="summary-item">
+            <small>Plants, Rocks & Moss</small>
+            <strong>
+              {customDecors.length} · {mossCount} moss
+            </strong>
           </div>
         </div>
 
@@ -154,17 +199,41 @@ export const ExportLabView: React.FC<ExportLabViewProps> = ({
           <textarea
             className="cozy-textarea"
             rows={3}
-            placeholder="e.g. Combine Stickerbook outlines with Musgo & Papel colors, put Draw button bigger for my daughters..."
+            placeholder="e.g. Love Bell Dome jar + Pet Rock mode! Let's make bichos sleep under plants next..."
             value={globalNotes}
             onChange={(e) => onChangeGlobalNotes(e.target.value)}
           />
         </label>
       </div>
 
+      {/* Hand-drawn Bichos preview */}
+      {customBichos.length > 0 && (
+        <div className="export-card">
+          <h3>Our Drawn Bichos ({customBichos.length})</h3>
+          <div className="sketch-thumb-grid">
+            {customBichos.map((b) => (
+              <div key={b.id} className="sketch-thumb-card">
+                <img
+                  src={b.spriteDataUrl}
+                  alt={b.name}
+                  style={{ objectFit: 'contain', background: '#FAF4E6', padding: 8 }}
+                />
+                <strong>{b.name}</strong>
+                <small>
+                  {b.movement} · by {b.creator}
+                </small>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Theme ratings digest */}
       <div className="export-card">
         <div className="card-head-row">
-          <h3>Theme Ratings ({ratedThemes.length}/{THEMES.length})</h3>
+          <h3>
+            Theme Ratings ({ratedThemes.length}/{THEMES.length})
+          </h3>
         </div>
         <div className="ratings-list">
           {THEMES.map((t) => {

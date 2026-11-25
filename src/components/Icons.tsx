@@ -162,3 +162,34 @@ export const PassportIcon: React.FC<IconProps> = ({ size = 18, className }) => (
     <path d="M8.8 11h6.4M12 7.8c1 1 1 5.4 0 6.4M9 16.8h6" />
   </svg>
 );
+
+export const FullscreenIcon: React.FC<IconProps> = ({ size = 16, className }) => (
+  <svg {...base(size)} className={className}>
+    <path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9" />
+    <path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9" />
+    <path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15" />
+    <path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15" />
+  </svg>
+);
+
+export const DropletIcon: React.FC<IconProps> = ({ size = 17, className }) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3.8C12 3.8 6.5 10.2 6.5 14.3a5.5 5.5 0 1 0 11 0C17.5 10.2 12 3.8 12 3.8Z" />
+    <path d="M9.6 14.8a2.4 2.4 0 0 0 1.8 2.1" />
+  </svg>
+);
+
+export const RockIcon: React.FC<IconProps> = ({ size = 18, className }) => (
+  <svg {...base(size)} className={className}>
+    <path d="M5.5 17.5 4 13l3.2-5.5 5.8-1.5 5.2 3.5L20 15l-2.5 3H7.5l-2-.5Z" />
+    <path d="M9 12.2c1.2-.8 3-.8 4.2 0" />
+  </svg>
+);
+
+export const TrashIcon: React.FC<IconProps> = ({ size = 16, className }) => (
+  <svg {...base(size)} className={className}>
+    <path d="M4.5 7h15" />
+    <path d="M9.5 4h5" />
+    <path d="M7 7v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7" />
+  </svg>
+);

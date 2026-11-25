@@ -2,8 +2,18 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import JSZip from 'jszip';
-import { CURATED_DRAW_PALETTES, LAYOUT_OPTIONS, THEMES } from '../data/themes';
 import {
+  AMBIANCE_OPTIONS,
+  CURATED_DRAW_PALETTES,
+  JAR_SHAPE_OPTIONS,
+  LAYOUT_OPTIONS,
+  THEMES,
+} from '../data/themes';
+import {
+  AmbianceMode,
+  CustomBicho,
+  CustomDecor,
+  JarShape,
   LayoutArchetype,
   MenuSketch,
   StyleOverrides,
@@ -14,10 +24,15 @@ export interface LabExportPayload {
   appVersion: string;
   activeThemeId: string;
   activeLayout: LayoutArchetype;
+  activeJarShape: JarShape;
+  activeAmbiance: AmbianceMode;
   activeDrawPaletteId: string;
   overridesByTheme: Record<string, StyleOverrides>;
   feedbackByTheme: Record<string, ThemeFeedback>;
   sketches: MenuSketch[];
+  customBichos: CustomBicho[];
+  customDecors: CustomDecor[];
+  mossCount: number;
   globalNotes: string;
   pointerTypesSeen: string[];
 }
@@ -39,7 +54,7 @@ function slugify(input: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
-      .slice(0, 32) || 'sketch'
+      .slice(0, 32) || 'item'
   );
 }
 
@@ -57,14 +72,11 @@ export function renderSketchToDataUrl(sketch: MenuSketch, width = 900): string {
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
 
-  // Warm cream paper base
   ctx.fillStyle = '#FAF5E9';
   ctx.fillRect(0, 0, width, height);
 
-  // Subtle template ghost so layout intent is readable in exported PNG
   drawSketchTemplateGhost(ctx, sketch.template, width, height);
 
-  // Draw strokes (stored in normalized 0..1 coordinates)
   for (const stroke of sketch.strokes) {
     if (stroke.points.length === 0) continue;
     ctx.save();
@@ -111,11 +123,10 @@ export function renderSketchToDataUrl(sketch: MenuSketch, width = 900): string {
     ctx.restore();
   }
 
-  // Footer caption bar
   ctx.fillStyle = 'rgba(58, 46, 40, 0.65)';
   ctx.font = `600 ${Math.round(width * 0.022)}px sans-serif`;
   ctx.fillText(
-    `Bichario Lab 1 Sketch — "${sketch.title}" (template: ${sketch.template})`,
+    `Bichario Lab 1.1 Sketch — "${sketch.title}" (template: ${sketch.template})`,
     Math.round(width * 0.03),
     height - Math.round(width * 0.025)
   );
@@ -134,7 +145,6 @@ export function drawSketchTemplateGhost(
   ctx.fillStyle = 'rgba(110, 96, 84, 0.16)';
   ctx.lineWidth = Math.max(1.5, w * 0.003);
 
-  // Dot grid for grid + all screen templates subtly
   if (template === 'grid') {
     const step = Math.max(18, Math.round(w / 18));
     for (let y = step; y < h; y += step) {
@@ -153,13 +163,11 @@ export function drawSketchTemplateGhost(
     return;
   }
 
-  // Subtle phone frame safe-area inset
   ctx.setLineDash([w * 0.015, w * 0.012]);
   ctx.strokeRect(w * 0.04, h * 0.04, w * 0.92, h * 0.92);
   ctx.setLineDash([]);
 
   if (template === 'terrarium') {
-    // Glass jar silhouette
     const jx = w * 0.14;
     const jy = h * 0.18;
     const jw = w * 0.72;
@@ -168,12 +176,10 @@ export function drawSketchTemplateGhost(
     ctx.roundRect(jx, jy, jw, jh, w * 0.12);
     ctx.stroke();
 
-    // Cork lid
     ctx.beginPath();
     ctx.roundRect(w * 0.34, h * 0.125, w * 0.32, h * 0.055, w * 0.03);
     ctx.stroke();
 
-    // Moss curve
     ctx.beginPath();
     ctx.moveTo(jx + w * 0.02, jy + jh * 0.72);
     ctx.quadraticCurveTo(w * 0.5, jy + jh * 0.6, jx + jw - w * 0.02, jy + jh * 0.74);
@@ -224,25 +230,52 @@ export function drawSketchTemplateGhost(
 function buildFeedbackMarkdown(payload: LabExportPayload, exportedAt: string): string {
   const activeTheme = THEMES.find((t) => t.id === payload.activeThemeId);
   const activeLayout = LAYOUT_OPTIONS.find((l) => l.id === payload.activeLayout);
+  const activeJar = JAR_SHAPE_OPTIONS.find((j) => j.id === payload.activeJarShape);
+  const activeAmb = AMBIANCE_OPTIONS.find((a) => a.id === payload.activeAmbiance);
   const activePalette = CURATED_DRAW_PALETTES.find((p) => p.id === payload.activeDrawPaletteId);
 
   const lines: string[] = [
-    `# Bichario Lab 1 — Exported Feedback`,
+    `# Bichario Lab 1.1 — Exported Feedback & Creations`,
     ``,
     `- **Exported:** ${exportedAt}`,
     `- **App Version:** ${payload.appVersion}`,
     `- **Selected Theme:** ${activeTheme?.name ?? payload.activeThemeId} (\`${payload.activeThemeId}\`)`,
+    `- **Selected Jar Shape:** ${activeJar?.name ?? payload.activeJarShape} (\`${payload.activeJarShape}\`)`,
+    `- **Selected Ambiance:** ${activeAmb?.label ?? payload.activeAmbiance}`,
     `- **Selected Menu Layout:** ${activeLayout?.name ?? payload.activeLayout} (\`${payload.activeLayout}\`)`,
     `- **Selected Drawing Palette:** ${activePalette?.name ?? payload.activeDrawPaletteId}`,
-    `- **Pointer Types Observed:** ${payload.pointerTypesSeen.length ? payload.pointerTypesSeen.join(', ') : 'none yet'}`,
+    `- **Custom Drawn Bichos:** ${payload.customBichos.length}`,
+    `- **Custom Drawn Plants/Rocks:** ${payload.customDecors.length}`,
+    `- **Painted Moss Tufts:** ${payload.mossCount}`,
     `- **Menu Sketches Included:** ${payload.sketches.length}`,
+    `- **Pointer Types Observed:** ${payload.pointerTypesSeen.length ? payload.pointerTypesSeen.join(', ') : 'none yet'}`,
     ``,
     `## Global Notes`,
     payload.globalNotes.trim() ? payload.globalNotes.trim() : `_No global notes entered._`,
     ``,
-    `## Theme Ratings & Notes`,
   ];
 
+  if (payload.customBichos.length > 0) {
+    lines.push(`## Hand-Drawn Bichos`);
+    payload.customBichos.forEach((b, i) => {
+      lines.push(
+        `${i + 1}. **${b.name}** by ${b.creator} — movement: \`${b.movement}\`, status: \`${b.status}\`, scale: ${b.scale}`
+      );
+    });
+    lines.push('');
+  }
+
+  if (payload.customDecors.length > 0) {
+    lines.push(`## Hand-Drawn Plants & Rocks`);
+    payload.customDecors.forEach((d, i) => {
+      lines.push(
+        `${i + 1}. **${d.name}** (${d.kind}) by ${d.creator} — smartExpand: ${d.smartExpand}, inJar: ${d.inJar}`
+      );
+    });
+    lines.push('');
+  }
+
+  lines.push(`## Theme Ratings & Notes`);
   for (const theme of THEMES) {
     const fb = payload.feedbackByTheme[theme.id];
     const ov = payload.overridesByTheme[theme.id];
@@ -281,19 +314,23 @@ function buildFeedbackMarkdown(payload: LabExportPayload, exportedAt: string): s
 export async function exportLabZip(payload: LabExportPayload): Promise<ExportResult> {
   const now = new Date();
   const stamp = formatTimestamp(now);
-  const filename = `bichario-lab1-${stamp}.zip`;
+  const filename = `bichario-lab1.1-${stamp}.zip`;
   const exportedAt = now.toISOString();
 
   const zip = new JSZip();
 
   const manifest = {
-    schemaVersion: 1,
-    lab: 'lab-1-ui-arena-and-menu-scribbler',
+    schemaVersion: 2,
+    lab: 'lab-1.1-arena-draw-jars-scribbler',
     appVersion: payload.appVersion,
     exportedAt,
     device: {
       userAgent: navigator.userAgent,
-      viewport: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio },
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        dpr: window.devicePixelRatio,
+      },
       platform: Capacitor.getPlatform(),
       isNative: Capacitor.isNativePlatform(),
       pointerTypesSeen: payload.pointerTypesSeen,
@@ -301,17 +338,64 @@ export async function exportLabZip(payload: LabExportPayload): Promise<ExportRes
     selections: {
       activeThemeId: payload.activeThemeId,
       activeLayout: payload.activeLayout,
+      activeJarShape: payload.activeJarShape,
+      activeAmbiance: payload.activeAmbiance,
       activeDrawPaletteId: payload.activeDrawPaletteId,
       activeOverrides: payload.overridesByTheme[payload.activeThemeId] ?? null,
     },
     overridesByTheme: payload.overridesByTheme,
     feedbackByTheme: payload.feedbackByTheme,
     globalNotes: payload.globalNotes,
-    sketchesCount: payload.sketches.length,
+    counts: {
+      sketches: payload.sketches.length,
+      customBichos: payload.customBichos.length,
+      customDecors: payload.customDecors.length,
+      mossBlobs: payload.mossCount,
+    },
   };
 
   zip.file('manifest.json', JSON.stringify(manifest, null, 2));
   zip.file('feedback.md', buildFeedbackMarkdown(payload, exportedAt));
+
+  if (payload.customBichos.length > 0) {
+    const folder = zip.folder('bichos');
+    const meta = payload.customBichos.map((b, idx) => {
+      const pngName = `bicho-${String(idx + 1).padStart(2, '0')}-${slugify(b.name)}.png`;
+      if (folder && b.spriteDataUrl) {
+        folder.file(pngName, dataUrlToBase64(b.spriteDataUrl), { base64: true });
+      }
+      return {
+        file: pngName,
+        name: b.name,
+        creator: b.creator,
+        movement: b.movement,
+        status: b.status,
+        scale: b.scale,
+        stickerOutline: b.stickerOutline,
+        birthday: b.birthday,
+      };
+    });
+    folder?.file('bichos-meta.json', JSON.stringify(meta, null, 2));
+  }
+
+  if (payload.customDecors.length > 0) {
+    const folder = zip.folder('decor');
+    const meta = payload.customDecors.map((d, idx) => {
+      const pngName = `${d.kind}-${String(idx + 1).padStart(2, '0')}-${slugify(d.name)}.png`;
+      if (folder && d.spriteDataUrl) {
+        folder.file(pngName, dataUrlToBase64(d.spriteDataUrl), { base64: true });
+      }
+      return {
+        file: pngName,
+        kind: d.kind,
+        name: d.name,
+        creator: d.creator,
+        smartExpand: d.smartExpand,
+        inJar: d.inJar,
+      };
+    });
+    folder?.file('decor-meta.json', JSON.stringify(meta, null, 2));
+  }
 
   if (payload.sketches.length > 0) {
     const sketchFolder = zip.folder('sketches');
@@ -343,10 +427,10 @@ export async function exportLabZip(payload: LabExportPayload): Promise<ExportRes
     });
 
     await Share.share({
-      title: 'Bichario Lab 1 Export',
-      text: 'My Bichario UI preferences, ratings & scribbled menu sketches!',
+      title: 'Bichario Lab 1.1 Export',
+      text: 'My Bichario UI preferences, drawn bichos, jar picks & menu sketches!',
       url: written.uri,
-      dialogTitle: 'Save or share Bichario Lab ZIP',
+      dialogTitle: 'Save or share Bichario Lab 1.1 ZIP',
     });
 
     return {

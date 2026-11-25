@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
-import { CURATED_DRAW_PALETTES, SAMPLE_BICHOS } from '../data/themes';
 import {
+  AMBIANCE_OPTIONS,
+  JAR_SHAPE_OPTIONS,
+  MOVEMENT_OPTIONS,
+  SAMPLE_BICHOS,
+} from '../data/themes';
+import {
+  AmbianceMode,
+  CustomBicho,
+  CustomDecor,
+  JarShape,
   LayoutArchetype,
+  MossBlob,
+  MovementStyle,
   PreviewScreen,
   SampleBicho,
   StyleOverrides,
@@ -9,70 +20,118 @@ import {
 } from '../types';
 import { cozyTap } from '../utils/haptics';
 import { resolvePalette } from '../utils/themeCss';
+import { DrawStudio } from './DrawStudio';
 import {
   BichodexIcon,
   BrushIcon,
+  DropletIcon,
   JarIcon,
-  MirrorIcon,
   MossLeafIcon,
   PassportIcon,
   SatchelIcon,
-  SharedJarIcon,
-  SparkleIcon,
-  UndoIcon,
+  TrashIcon,
 } from './Icons';
-import { TerrariumCanvas } from './TerrariumCanvas';
+import { ActiveBichoSelection, TerrariumCanvas } from './TerrariumCanvas';
 
 interface ArenaPreviewProps {
   theme: ThemeSpec;
   overrides: StyleOverrides;
   layout: LayoutArchetype;
+  jarShape: JarShape;
+  ambiance: AmbianceMode;
   screen: PreviewScreen;
   drawPaletteId: string;
+  customBichos: CustomBicho[];
+  customDecors: CustomDecor[];
+  mossBlobs: MossBlob[];
+  showStarters: boolean;
+  lastCreator: string;
   onChangeScreen: (screen: PreviewScreen) => void;
+  onChangeDrawPalette: (id: string) => void;
+  onCycleJarShape: () => void;
+  onCycleAmbiance: () => void;
+  onSaveBicho: (bicho: CustomBicho) => void;
+  onToggleCustomBichoStatus: (id: string) => void;
+  onChangeCustomBichoMovement: (id: string, movement: MovementStyle) => void;
+  onDeleteCustomBicho: (id: string) => void;
+  onSaveDecor: (decor: CustomDecor) => void;
+  onToggleDecorInJar: (id: string) => void;
+  onDeleteDecor: (id: string) => void;
+  onAddMossBlob: (blob: MossBlob) => void;
+  onUndoMoss: () => void;
+  onClearMoss: () => void;
+  onToggleShowStarters: () => void;
+  onPointerSeen: (pt: string) => void;
 }
 
 export const ArenaPreview: React.FC<ArenaPreviewProps> = ({
   theme,
   overrides,
   layout,
+  jarShape,
+  ambiance,
   screen,
   drawPaletteId,
+  customBichos,
+  customDecors,
+  mossBlobs,
+  showStarters,
+  lastCreator,
   onChangeScreen,
+  onChangeDrawPalette,
+  onCycleJarShape,
+  onCycleAmbiance,
+  onSaveBicho,
+  onToggleCustomBichoStatus,
+  onChangeCustomBichoMovement,
+  onDeleteCustomBicho,
+  onSaveDecor,
+  onToggleDecorInJar,
+  onDeleteDecor,
+  onAddMossBlob,
+  onUndoMoss,
+  onClearMoss,
+  onToggleShowStarters,
+  onPointerSeen,
 }) => {
   const palette = resolvePalette(theme, overrides);
-  const drawPalette =
-    CURATED_DRAW_PALETTES.find((p) => p.id === drawPaletteId) ?? CURATED_DRAW_PALETTES[0];
 
-  const [selectedBicho, setSelectedBicho] = useState<SampleBicho | null>(null);
+  const [selectedBicho, setSelectedBicho] = useState<ActiveBichoSelection | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [satchelOpen, setSatchelOpen] = useState(true);
-  const [mossToast, setMossToast] = useState(false);
+  const [mossPaintMode, setMossPaintMode] = useState(false);
+  const [mistPulse, setMistPulse] = useState(0);
 
-  // Interactive Draw Studio mockup states
-  const [activeBrush, setActiveBrush] = useState<'crayon' | 'ink' | 'marker' | 'glow'>('crayon');
-  const [activeColor, setActiveColor] = useState(drawPalette.colors[2].hex);
-  const [mirrorOn, setMirrorOn] = useState(true);
-  const [stickerOn, setStickerOn] = useState(true);
-  const [proOpen, setProOpen] = useState(false);
-
-  // Interactive Bichodex states
-  const [dexFilter, setDexFilter] = useState<'all' | 'in_jar' | 'visiting'>('all');
-  const [jarState, setJarState] = useState<Record<string, SampleBicho['status']>>({
+  const [dexTab, setDexTab] = useState<'all' | 'mine' | 'decor'>('all');
+  const [starterStatuses, setStarterStatuses] = useState<
+    Record<string, SampleBicho['status']>
+  >({
     rolo: 'in_jar',
     mimi: 'in_jar',
     lulu: 'in_jar',
-    boli: 'visiting',
+    boli: 'in_jar',
   });
+
+  const activeStarterCount = showStarters
+    ? SAMPLE_BICHOS.filter((b) => (starterStatuses[b.id] ?? b.status) === 'in_jar').length
+    : 0;
+  const activeCustomCount = customBichos.filter((b) => b.status === 'in_jar').length;
+  const totalInJar = activeStarterCount + activeCustomCount;
+
+  const ambInfo =
+    AMBIANCE_OPTIONS.find((a) => a.id === ambiance) ?? AMBIANCE_OPTIONS[0];
+  const jarInfo =
+    JAR_SHAPE_OPTIONS.find((j) => j.id === jarShape) ?? JAR_SHAPE_OPTIONS[0];
 
   const handleNavAction = (action: 'terrarium' | 'draw' | 'moss' | 'bichodex') => {
     cozyTap('light');
     if (action === 'moss') {
       onChangeScreen('terrarium');
-      setMossToast(true);
-      setTimeout(() => setMossToast(false), 1800);
+      setSelectedBicho(null);
+      setMossPaintMode((v) => !v);
       return;
     }
+    setMossPaintMode(false);
     onChangeScreen(action);
   };
 
@@ -87,7 +146,61 @@ export const ArenaPreview: React.FC<ArenaPreviewProps> = ({
     { id: 'bichodex', label: 'Bichodex', icon: <BichodexIcon size={19} /> },
   ];
 
+  const cycleMovementForSelected = () => {
+    if (!selectedBicho || !selectedBicho.isCustom) return;
+    cozyTap('light');
+    const idx = MOVEMENT_OPTIONS.findIndex((m) => m.id === selectedBicho.movement);
+    const next = MOVEMENT_OPTIONS[(idx + 1) % MOVEMENT_OPTIONS.length].id;
+    onChangeCustomBichoMovement(selectedBicho.id, next);
+    setSelectedBicho({ ...selectedBicho, movement: next });
+  };
+
   const renderTerrariumNav = () => {
+    if (mossPaintMode) {
+      return (
+        <div className="b-card moss-paint-bar">
+          <div className="moss-paint-info">
+            <MossLeafIcon size={17} />
+            <span>Paint moss with your finger!</span>
+          </div>
+          <div className="moss-paint-actions">
+            <button
+              type="button"
+              className="b-btn mini-toggle"
+              onClick={() => {
+                cozyTap('light');
+                onUndoMoss();
+              }}
+              disabled={mossBlobs.length === 0}
+            >
+              Undo
+            </button>
+            <button
+              type="button"
+              className="b-btn mini-toggle"
+              onClick={() => {
+                cozyTap('medium');
+                onClearMoss();
+              }}
+              disabled={mossBlobs.length === 0}
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              className="b-btn primary-btn mini-toggle"
+              onClick={() => {
+                cozyTap('light');
+                setMossPaintMode(false);
+              }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (layout === 'dock') {
       return (
         <nav className="mock-dock" aria-label="Mock Pill Dock">
@@ -200,7 +313,6 @@ export const ArenaPreview: React.FC<ArenaPreviewProps> = ({
       );
     }
 
-    // Radial Satchel
     return (
       <div className="mock-satchel-wrap">
         {satchelOpen && (
@@ -246,34 +358,71 @@ export const ArenaPreview: React.FC<ArenaPreviewProps> = ({
     );
   };
 
-  const filteredBichos = SAMPLE_BICHOS.filter((b) => {
-    if (dexFilter === 'all') return true;
-    return (jarState[b.id] ?? b.status) === dexFilter;
-  });
-
   return (
     <div className={`arena-stage texture-${overrides.texture}`}>
-      {/* Mock Bichario Top Header inside the preview */}
+      {/* Mock Bichario Top Header */}
       <header className="mock-topbar">
-        <div className="b-card mock-jar-pill">
-          <span className="jar-dot" />
-          <div>
-            <strong>Casa Jar</strong>
-            <small>4 bichos · cozy moss</small>
-          </div>
-        </div>
-
         <button
           type="button"
-          className="b-btn mock-family-pill"
+          className="b-card mock-jar-pill"
           onClick={() => {
             cozyTap('light');
-            onChangeScreen(screen === 'bichodex' ? 'terrarium' : 'bichodex');
+            onCycleJarShape();
           }}
+          title="Tap to try another jar shape"
         >
-          <SharedJarIcon size={16} />
-          <span>Familia</span>
+          <span className="jar-dot" />
+          <div style={{ textAlign: 'left' }}>
+            <strong>Casa Jar</strong>
+            <small>
+              {totalInJar} {totalInJar === 1 ? 'bicho' : 'bichos'} · {jarInfo.short} ↻
+            </small>
+          </div>
         </button>
+
+        <div className="topbar-right-actions">
+          {screen === 'terrarium' && (
+            <>
+              <button
+                type="button"
+                className="b-btn mock-icon-pill"
+                onClick={() => {
+                  cozyTap('medium');
+                  setMistPulse((n) => n + 1);
+                }}
+                title="Mist the jar"
+                aria-label="Mist the jar"
+              >
+                <DropletIcon size={16} />
+              </button>
+              <button
+                type="button"
+                className="b-btn mock-family-pill"
+                onClick={() => {
+                  cozyTap('light');
+                  onCycleAmbiance();
+                }}
+                title="Switch weather & lighting"
+              >
+                <span>{ambInfo.icon}</span>
+                <span>{ambInfo.label}</span>
+              </button>
+            </>
+          )}
+          {screen !== 'terrarium' && (
+            <button
+              type="button"
+              className="b-btn mock-family-pill"
+              onClick={() => {
+                cozyTap('light');
+                onChangeScreen('terrarium');
+              }}
+            >
+              <JarIcon size={15} />
+              <span>Jar</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* SCREEN 1: LIVING TERRARIUM */}
@@ -281,29 +430,39 @@ export const ArenaPreview: React.FC<ArenaPreviewProps> = ({
         <div className="mock-terrarium-body">
           <TerrariumCanvas
             palette={palette}
+            jarShape={jarShape}
+            ambiance={ambiance}
+            customBichos={customBichos}
+            customDecors={customDecors}
+            mossBlobs={mossBlobs}
+            starterStatuses={starterStatuses}
+            showStarters={showStarters}
             selectedBichoId={selectedBicho?.id ?? null}
+            mossPaintMode={mossPaintMode}
+            mistPulse={mistPulse}
             onSelectBicho={(b) => setSelectedBicho(b)}
-            stickerOutline={stickerOn}
+            onAddMossBlob={onAddMossBlob}
           />
-
-          {mossToast && (
-            <div className="b-card mock-toast">
-              <MossLeafIcon size={16} />
-              <span>Living Moss Brush — coming in Lab 4!</span>
-            </div>
-          )}
 
           {selectedBicho && (
             <div className="b-card mock-bicho-pop">
               <div className="pop-head">
-                <span
-                  className="pop-swatch"
-                  style={{ background: selectedBicho.color }}
-                />
+                {selectedBicho.spriteDataUrl ? (
+                  <span className="pop-sprite-wrap">
+                    <img src={selectedBicho.spriteDataUrl} alt={selectedBicho.name} />
+                  </span>
+                ) : (
+                  <span
+                    className="pop-swatch"
+                    style={{ background: selectedBicho.color || '#DF6449' }}
+                  />
+                )}
                 <div className="pop-title">
                   <strong>{selectedBicho.name}</strong>
                   <small>
-                    {selectedBicho.species} · by {selectedBicho.creator}
+                    {MOVEMENT_OPTIONS.find((m) => m.id === selectedBicho.movement)?.emoji}{' '}
+                    {MOVEMENT_OPTIONS.find((m) => m.id === selectedBicho.movement)?.name} · by{' '}
+                    {selectedBicho.creator}
                   </small>
                 </div>
                 <button
@@ -316,264 +475,289 @@ export const ArenaPreview: React.FC<ArenaPreviewProps> = ({
                 </button>
               </div>
               <p className="pop-note">{selectedBicho.note}</p>
-              <div className="pop-stamps">
-                {selectedBicho.stamps.map((s) => (
-                  <span key={s.jar} className="b-chip">
-                    {s.icon} {s.jar}
-                  </span>
-                ))}
+              <div className="pop-actions-row">
+                {selectedBicho.isCustom && (
+                  <>
+                    <button
+                      type="button"
+                      className="b-btn pop-mini-btn"
+                      onClick={cycleMovementForSelected}
+                    >
+                      Switch Move ↻
+                    </button>
+                    <button
+                      type="button"
+                      className="b-btn pop-mini-btn"
+                      onClick={() => {
+                        cozyTap('light');
+                        onToggleCustomBichoStatus(selectedBicho.id);
+                        setSelectedBicho(null);
+                      }}
+                    >
+                      Rest in Dex
+                    </button>
+                  </>
+                )}
+                <div className="pop-stamps">
+                  {selectedBicho.stamps.map((s) => (
+                    <span key={s.jar} className="b-chip">
+                      {s.icon} {s.jar}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          <div className="tap-hint-pill">Tap any bicho or the glass</div>
+          {!mossPaintMode && !selectedBicho && jarShape !== 'teardrop' && (
+            <div className="tap-hint-pill">
+              {customBichos.length === 0
+                ? 'Tap Draw to create your own bicho!'
+                : 'Tap a bicho · Tap Casa Jar to swap jar'}
+            </div>
+          )}
 
           {renderTerrariumNav()}
         </div>
       )}
 
-      {/* SCREEN 2: DRAW STUDIO PREVIEW */}
+      {/* SCREEN 2: REAL INTERACTIVE DRAW STUDIO */}
       {screen === 'draw' && (
-        <div className="mock-draw-screen">
-          <div className="b-card mock-draw-canvas-box">
-            <div className="draw-canvas-header">
-              <span className="b-chip">New Bicho</span>
-              <span className="mono-tag">{drawPalette.name}</span>
-            </div>
-
-            <div className="mock-sketch-preview">
-              {mirrorOn && <div className="mirror-axis" />}
-              <svg viewBox="0 0 180 130" className="preview-doodle-svg">
-                <g
-                  style={{
-                    filter: stickerOn
-                      ? 'drop-shadow(0 0 3px #fff) drop-shadow(0 2px 3px rgba(0,0,0,0.12))'
-                      : 'none',
-                  }}
-                >
-                  {stickerOn && (
-                    <ellipse
-                      cx="90"
-                      cy="70"
-                      rx="42"
-                      ry="32"
-                      fill="none"
-                      stroke="#FFFDF8"
-                      strokeWidth="12"
-                    />
-                  )}
-                  <ellipse
-                    cx="90"
-                    cy="70"
-                    rx="38"
-                    ry="28"
-                    fill={activeColor}
-                    stroke="#332722"
-                    strokeWidth="3.5"
-                  />
-                  <circle cx="75" cy="64" r="6" fill="#FFFDF8" opacity="0.85" />
-                  <circle cx="105" cy="64" r="6" fill="#FFFDF8" opacity="0.85" />
-                  <circle cx="90" cy="40" r="14" fill="#332722" />
-                  <circle cx="85" cy="37" r="3" fill="#FFFDF8" />
-                  <circle cx="95" cy="37" r="3" fill="#FFFDF8" />
-                  <path
-                    d="M84 28 Q74 14 66 18 M96 28 Q106 14 114 18"
-                    fill="none"
-                    stroke="#332722"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M54 62 L42 56 M53 74 L41 78 M126 62 L138 56 M127 74 L139 78"
-                    stroke="#332722"
-                    strokeWidth="3.2"
-                    strokeLinecap="round"
-                  />
-                </g>
-              </svg>
-              <small className="draw-brush-readout">
-                Brush: <strong>{activeBrush}</strong>
-                {mirrorOn ? ' · Mirror ON' : ''}
-                {stickerOn ? ' · Sticker Rim' : ''}
-              </small>
-            </div>
-          </div>
-
-          {/* Curated Cozy Color Blobs */}
-          <div className="b-card mock-palette-bar">
-            <div className="palette-blobs">
-              {drawPalette.colors.map((c) => (
-                <button
-                  key={c.hex}
-                  type="button"
-                  className={`color-blob ${activeColor === c.hex ? 'is-picked' : ''}`}
-                  style={{ background: c.hex }}
-                  title={c.name}
-                  onClick={() => {
-                    cozyTap('light');
-                    setActiveColor(c.hex);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Kid-clean default tool strip + expandable Pro drawer */}
-          <div className="mock-tool-row">
-            {(['crayon', 'ink', 'marker', 'glow'] as const).map((b) => (
-              <button
-                key={b}
-                type="button"
-                className={`b-btn mock-tool-pill ${activeBrush === b ? 'is-active' : ''}`}
-                onClick={() => {
-                  cozyTap('light');
-                  setActiveBrush(b);
-                }}
-              >
-                {b === 'glow' ? <SparkleIcon size={15} /> : <BrushIcon size={15} />}
-                <span>{b}</span>
-              </button>
-            ))}
-            <button
-              type="button"
-              className={`b-btn mock-tool-pill ${proOpen ? 'is-active' : ''}`}
-              onClick={() => {
-                cozyTap('light');
-                setProOpen((v) => !v);
-              }}
-            >
-              <span>{proOpen ? 'Less' : 'More +'}</span>
-            </button>
-          </div>
-
-          {proOpen && (
-            <div className="b-card mock-pro-drawer">
-              <button
-                type="button"
-                className={`b-btn mini-toggle ${mirrorOn ? 'is-active' : ''}`}
-                onClick={() => {
-                  cozyTap('light');
-                  setMirrorOn((v) => !v);
-                }}
-              >
-                <MirrorIcon size={15} />
-                <span>Mirror {mirrorOn ? 'ON' : 'OFF'}</span>
-              </button>
-              <button
-                type="button"
-                className={`b-btn mini-toggle ${stickerOn ? 'is-active' : ''}`}
-                onClick={() => {
-                  cozyTap('light');
-                  setStickerOn((v) => !v);
-                }}
-              >
-                <SparkleIcon size={15} />
-                <span>Sticker Outline</span>
-              </button>
-              <button
-                type="button"
-                className="b-btn mini-toggle"
-                onClick={() => cozyTap('light')}
-              >
-                <UndoIcon size={15} />
-                <span>Undo</span>
-              </button>
-            </div>
-          )}
-
-          <div className="mock-draw-footer">
-            <button
-              type="button"
-              className="b-btn secondary-btn"
-              onClick={() => onChangeScreen('terrarium')}
-            >
-              Back to Jar
-            </button>
-            <button
-              type="button"
-              className="b-btn primary-btn"
-              onClick={() => {
-                cozyTap('medium');
-                onChangeScreen('terrarium');
-              }}
-            >
-              Name & Drop in Jar →
-            </button>
-          </div>
-        </div>
+        <DrawStudio
+          drawPaletteId={drawPaletteId}
+          lastCreator={lastCreator}
+          onChangeDrawPalette={onChangeDrawPalette}
+          onSaveBicho={(b) => {
+            onSaveBicho(b);
+            onChangeScreen('terrarium');
+          }}
+          onSaveDecor={(d) => {
+            onSaveDecor(d);
+            onChangeScreen('terrarium');
+          }}
+          onBackToJar={() => onChangeScreen('terrarium')}
+          onPointerSeen={onPointerSeen}
+        />
       )}
 
-      {/* SCREEN 3: BICHODEX FIELD GUIDE PREVIEW */}
+      {/* SCREEN 3: BICHODEX FIELD GUIDE */}
       {screen === 'bichodex' && (
         <div className="mock-dex-screen">
           <div className="dex-filter-row">
-            {(
-              [
-                { id: 'all', label: 'All (4)' },
-                { id: 'in_jar', label: 'In Jar' },
-                { id: 'visiting', label: 'Visiting' },
-              ] as const
-            ).map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                className={`b-btn dex-filter-btn ${dexFilter === f.id ? 'is-active' : ''}`}
-                onClick={() => {
-                  cozyTap('light');
-                  setDexFilter(f.id);
-                }}
-              >
-                {f.label}
-              </button>
-            ))}
+            <button
+              type="button"
+              className={`b-btn dex-filter-btn ${dexTab === 'all' ? 'is-active' : ''}`}
+              onClick={() => {
+                cozyTap('light');
+                setDexTab('all');
+              }}
+            >
+              All ({customBichos.length + (showStarters ? SAMPLE_BICHOS.length : 0)})
+            </button>
+            <button
+              type="button"
+              className={`b-btn dex-filter-btn ${dexTab === 'mine' ? 'is-active' : ''}`}
+              onClick={() => {
+                cozyTap('light');
+                setDexTab('mine');
+              }}
+            >
+              Ours ({customBichos.length})
+            </button>
+            <button
+              type="button"
+              className={`b-btn dex-filter-btn ${dexTab === 'decor' ? 'is-active' : ''}`}
+              onClick={() => {
+                cozyTap('light');
+                setDexTab('decor');
+              }}
+            >
+              Plants & Rocks ({customDecors.length})
+            </button>
           </div>
 
-          <div className="dex-grid">
-            {filteredBichos.map((b) => {
-              const st = jarState[b.id] ?? b.status;
-              return (
-                <article key={b.id} className="b-card dex-card">
-                  <div className="dex-card-top">
-                    <span
-                      className="dex-avatar"
-                      style={{ background: b.color }}
-                    >
-                      <span
-                        className="dex-avatar-dot"
-                        style={{ background: b.spotColor }}
-                      />
-                    </span>
-                    <span className="mono-tag">{b.birthday}</span>
-                  </div>
-                  <strong className="dex-name">{b.name}</strong>
-                  <small className="dex-meta">
-                    {b.species} · by {b.creator}
-                  </small>
-                  <div className="dex-stamps">
-                    <PassportIcon size={13} />
-                    <span>{b.stamps.map((s) => s.icon).join(' ')}</span>
-                  </div>
+          {dexTab !== 'decor' && (
+            <>
+              {dexTab === 'mine' && customBichos.length === 0 && (
+                <div className="b-card dex-empty-card">
+                  <strong>No hand-drawn bichos yet!</strong>
+                  <p>Draw your first bicho, butterfly, or pet rock and it will live here forever.</p>
                   <button
                     type="button"
-                    className={`b-btn dex-status-btn ${st === 'in_jar' ? 'is-active' : ''}`}
-                    onClick={() => {
-                      cozyTap('light');
-                      setJarState((prev) => ({
-                        ...prev,
-                        [b.id]: st === 'in_jar' ? 'resting' : 'in_jar',
-                      }));
-                    }}
+                    className="b-btn primary-btn"
+                    style={{ padding: '10px 16px' }}
+                    onClick={() => onChangeScreen('draw')}
                   >
-                    {st === 'in_jar'
-                      ? 'In Jar ✓'
-                      : st === 'visiting'
-                        ? 'Visiting ✈'
-                        : 'Resting · Put In'}
+                    + Draw Our First Bicho
                   </button>
-                </article>
-              );
-            })}
-          </div>
+                </div>
+              )}
+
+              <div className="dex-grid">
+                {customBichos.map((cb) => {
+                  const moveInfo = MOVEMENT_OPTIONS.find((m) => m.id === cb.movement);
+                  return (
+                    <article key={cb.id} className="b-card dex-card">
+                      <div className="dex-card-top">
+                        <span className="dex-custom-thumb">
+                          <img src={cb.spriteDataUrl} alt={cb.name} />
+                        </span>
+                        <button
+                          type="button"
+                          className="dex-del-btn"
+                          title="Delete bicho"
+                          onClick={() => {
+                            cozyTap('medium');
+                            onDeleteCustomBicho(cb.id);
+                          }}
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                      </div>
+                      <strong className="dex-name">{cb.name}</strong>
+                      <small className="dex-meta">
+                        by {cb.creator} · {cb.birthday}
+                      </small>
+                      <button
+                        type="button"
+                        className="b-chip dex-move-chip"
+                        onClick={() => {
+                          cozyTap('light');
+                          const idx = MOVEMENT_OPTIONS.findIndex((m) => m.id === cb.movement);
+                          const next = MOVEMENT_OPTIONS[(idx + 1) % MOVEMENT_OPTIONS.length].id;
+                          onChangeCustomBichoMovement(cb.id, next);
+                        }}
+                      >
+                        {moveInfo?.emoji} {moveInfo?.name} ↻
+                      </button>
+                      <button
+                        type="button"
+                        className={`b-btn dex-status-btn ${cb.status === 'in_jar' ? 'is-active' : ''}`}
+                        onClick={() => {
+                          cozyTap('light');
+                          onToggleCustomBichoStatus(cb.id);
+                        }}
+                      >
+                        {cb.status === 'in_jar' ? 'In Jar ✓' : 'Resting · Put In'}
+                      </button>
+                    </article>
+                  );
+                })}
+
+                {dexTab === 'all' &&
+                  showStarters &&
+                  SAMPLE_BICHOS.map((b) => {
+                    const st = starterStatuses[b.id] ?? b.status;
+                    return (
+                      <article key={b.id} className="b-card dex-card">
+                        <div className="dex-card-top">
+                          <span className="dex-avatar" style={{ background: b.color }}>
+                            <span
+                              className="dex-avatar-dot"
+                              style={{ background: b.spotColor }}
+                            />
+                          </span>
+                          <span className="mono-tag">{b.birthday}</span>
+                        </div>
+                        <strong className="dex-name">{b.name}</strong>
+                        <small className="dex-meta">
+                          {b.species} · {b.creator}
+                        </small>
+                        <div className="dex-stamps">
+                          <PassportIcon size={13} />
+                          <span>{b.stamps.map((s) => s.icon).join(' ')}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className={`b-btn dex-status-btn ${st === 'in_jar' ? 'is-active' : ''}`}
+                          onClick={() => {
+                            cozyTap('light');
+                            setStarterStatuses((prev) => ({
+                              ...prev,
+                              [b.id]: st === 'in_jar' ? 'resting' : 'in_jar',
+                            }));
+                          }}
+                        >
+                          {st === 'in_jar' ? 'In Jar ✓' : 'Resting · Put In'}
+                        </button>
+                      </article>
+                    );
+                  })}
+              </div>
+
+              <label className="b-card dex-starter-toggle">
+                <input
+                  type="checkbox"
+                  checked={showStarters}
+                  onChange={() => {
+                    cozyTap('light');
+                    onToggleShowStarters();
+                  }}
+                />
+                <span>Include starter sample bichos in jar</span>
+              </label>
+            </>
+          )}
+
+          {dexTab === 'decor' && (
+            <>
+              {customDecors.length === 0 ? (
+                <div className="b-card dex-empty-card">
+                  <strong>No hand-drawn plants or rocks yet!</strong>
+                  <p>
+                    Go to <strong>Draw → Plant</strong> or <strong>Rock</strong> to grow
+                    procedural clusters in your jar.
+                  </p>
+                  <button
+                    type="button"
+                    className="b-btn primary-btn"
+                    style={{ padding: '10px 16px' }}
+                    onClick={() => onChangeScreen('draw')}
+                  >
+                    + Draw Plant or Rock
+                  </button>
+                </div>
+              ) : (
+                <div className="dex-grid">
+                  {customDecors.map((d) => (
+                    <article key={d.id} className="b-card dex-card">
+                      <div className="dex-card-top">
+                        <span className="dex-custom-thumb">
+                          <img src={d.spriteDataUrl} alt={d.name} />
+                        </span>
+                        <button
+                          type="button"
+                          className="dex-del-btn"
+                          title="Delete decor"
+                          onClick={() => {
+                            cozyTap('medium');
+                            onDeleteDecor(d.id);
+                          }}
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                      </div>
+                      <strong className="dex-name">{d.name}</strong>
+                      <small className="dex-meta">
+                        {d.kind === 'plant' ? '🌿 Plant' : '🪨 Rock'}
+                        {d.smartExpand ? ' · Smart Cluster' : ''}
+                      </small>
+                      <button
+                        type="button"
+                        className={`b-btn dex-status-btn ${d.inJar ? 'is-active' : ''}`}
+                        onClick={() => {
+                          cozyTap('light');
+                          onToggleDecorInJar(d.id);
+                        }}
+                      >
+                        {d.inJar ? 'In Jar ✓' : 'Hidden · Place'}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
           <button
             type="button"

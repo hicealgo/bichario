@@ -1,7 +1,14 @@
 import React from 'react';
-import { CURATED_DRAW_PALETTES, LAYOUT_OPTIONS } from '../data/themes';
 import {
+  AMBIANCE_OPTIONS,
+  CURATED_DRAW_PALETTES,
+  JAR_SHAPE_OPTIONS,
+  LAYOUT_OPTIONS,
+} from '../data/themes';
+import {
+  AmbianceMode,
   ComfortScale,
+  JarShape,
   LayoutArchetype,
   ShadowStyle,
   StyleOverrides,
@@ -20,11 +27,15 @@ interface TinkerDrawerProps {
   overrides: StyleOverrides;
   feedback: ThemeFeedback;
   layout: LayoutArchetype;
+  jarShape: JarShape;
+  ambiance: AmbianceMode;
   drawPaletteId: string;
   onChangeOverrides: (next: StyleOverrides) => void;
   onResetOverrides: () => void;
   onChangeFeedback: (next: ThemeFeedback) => void;
   onChangeLayout: (next: LayoutArchetype) => void;
+  onChangeJarShape: (next: JarShape) => void;
+  onChangeAmbiance: (next: AmbianceMode) => void;
   onChangeDrawPalette: (id: string) => void;
 }
 
@@ -35,11 +46,15 @@ export const TinkerDrawer: React.FC<TinkerDrawerProps> = ({
   overrides,
   feedback,
   layout,
+  jarShape,
+  ambiance,
   drawPaletteId,
   onChangeOverrides,
   onResetOverrides,
   onChangeFeedback,
   onChangeLayout,
+  onChangeJarShape,
+  onChangeAmbiance,
   onChangeDrawPalette,
 }) => {
   if (!open) return null;
@@ -124,10 +139,52 @@ export const TinkerDrawer: React.FC<TinkerDrawerProps> = ({
             <textarea
               className="cozy-textarea"
               rows={2}
-              placeholder={`Notes on "${theme.name}" (e.g. love the font, too thick borders, want warmer moss...)`}
+              placeholder={`Notes on "${theme.name}" (e.g. love the font, want warmer moss...)`}
               value={feedback.note}
               onChange={(e) => onChangeFeedback({ ...feedback, note: e.target.value })}
             />
+          </div>
+
+          {/* Jar Vessel Shape Variants (6!) */}
+          <div className="sheet-block">
+            <strong>Terrarium Jar Shape (6 Variants)</strong>
+            <div className="chip-grid">
+              {JAR_SHAPE_OPTIONS.map((j) => (
+                <button
+                  key={j.id}
+                  type="button"
+                  className={`tinker-chip ${jarShape === j.id ? 'is-active' : ''}`}
+                  onClick={() => {
+                    cozyTap('light');
+                    onChangeJarShape(j.id);
+                  }}
+                >
+                  {j.short}
+                </button>
+              ))}
+            </div>
+            <small className="helper-text">
+              {JAR_SHAPE_OPTIONS.find((j) => j.id === jarShape)?.desc}
+            </small>
+
+            <div className="sub-row" style={{ marginTop: 4 }}>
+              <span>Weather & Ambiance</span>
+              <div className="seg-row">
+                {AMBIANCE_OPTIONS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    className={`seg-btn ${ambiance === a.id ? 'is-active' : ''}`}
+                    onClick={() => {
+                      cozyTap('light');
+                      onChangeAmbiance(a.id);
+                    }}
+                  >
+                    {a.icon} {a.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Menu Layout Archetype */}
@@ -285,7 +342,11 @@ export const TinkerDrawer: React.FC<TinkerDrawerProps> = ({
               {(
                 [
                   { key: 'bg', label: 'Backdrop', val: pal.bg },
-                  { key: 'surface', label: 'Cards', val: pal.surface.startsWith('#') ? pal.surface : '#FFFDF7' },
+                  {
+                    key: 'surface',
+                    label: 'Cards',
+                    val: pal.surface.startsWith('#') ? pal.surface : '#FFFDF7',
+                  },
                   { key: 'accent', label: 'Accent', val: pal.accent },
                   { key: 'ink', label: 'Ink', val: pal.ink },
                 ] as const
